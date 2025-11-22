@@ -1,10 +1,14 @@
+
+KARLDWORLD DESIGN 2025
+
+View Our Company Portfolio: https://karldworld.xyz
+
 WEB3 IMPLEMENTATION
 
-# Run and deploy your AI Studio app
+# Run and deploy your suiTX app
 
 This contains everything you need to run your app locally.
 
-View Our Company Portfolio: https:/karldworld.xyz
 
 ## Run Locally
 
