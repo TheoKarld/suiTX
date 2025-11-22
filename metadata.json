@@ -1,0 +1,5 @@
+{
+  "name": "SuiTx Explainer",
+  "description": "A smart tool that uses Google Gemini to decode and explain complex Sui blockchain transactions in plain English.",
+  "requestFramePermissions": []
+}
