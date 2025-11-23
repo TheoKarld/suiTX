@@ -40,7 +40,7 @@ export const generateTransactionExplanationStream = async (
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'llama-3.1-70b-instant',   // Fast + high quality
+      model: 'llama-3.3-70b-versatile',   // Fast + high quality
       messages: [{ role: 'user', content: createPrompt(transactionData) }],
       temperature: 0.6,
       max_tokens: 1024,
