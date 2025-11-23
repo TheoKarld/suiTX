@@ -23,11 +23,17 @@ export const fetchSuiTransaction = async (digest: string): Promise<SuiTransactio
   };
 
   try {
-    const response = await fetch("/api/sui", {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    // const response = await fetch("/api/sui", {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify(body),
+    // });
+
+    const response = await fetch("https://mainnet.sui.rpcpool.com/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
 
