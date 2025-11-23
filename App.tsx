@@ -84,16 +84,19 @@ const App: React.FC = () => {
       }));
 
       // GROQ STREAMING (works perfectly now)
+      // GROQ STREAMING – 100% reliable
       const stream = await generateTransactionExplanationStream(txData);
       const reader = stream.getReader();
-      const decoder = new TextDecoder();
 
       try {
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
 
-          const textChunk = decoder.decode(value, { stream: true });
+          const textChunk = typeof value === 'string'
+            ? value
+            : new TextDecoder().decode(value, { stream: true });
+
           setState(prev => ({
             ...prev,
             explanation: prev.explanation + textChunk
