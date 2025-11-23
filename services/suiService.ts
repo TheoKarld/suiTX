@@ -23,23 +23,14 @@ export const fetchSuiTransaction = async (digest: string): Promise<SuiTransactio
   };
 
   try {
-    // const response = await fetch(SUI_MAINNET_RPC, {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify(body),
-    // });
     const response = await fetch("/api/sui", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        method: "suix_getBalance",
-        params: [digest],
-        id: 1,
-        jsonrpc: "2.0"
-      })
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
     });
+
 
 
     if (!response.ok) {
