@@ -23,13 +23,24 @@ export const fetchSuiTransaction = async (digest: string): Promise<SuiTransactio
   };
 
   try {
-    const response = await fetch(SUI_MAINNET_RPC, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
+    // const response = await fetch(SUI_MAINNET_RPC, {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify(body),
+    // });
+    const response = await fetch("/api/sui", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        method: "suix_getBalance",
+        params: [digest],
+        id: 1,
+        jsonrpc: "2.0"
+      })
     });
+
 
     if (!response.ok) {
       throw new Error(`RPC Error: ${response.status} ${response.statusText}`);
@@ -40,7 +51,7 @@ export const fetchSuiTransaction = async (digest: string): Promise<SuiTransactio
     if (data.error) {
       // Handle "Invalid Params" error specifically
       if (data.error.code === -32602) {
-         throw new Error('Invalid Transaction Digest format. Ensure you are not pasting an Object ID or Address.');
+        throw new Error('Invalid Transaction Digest format. Ensure you are not pasting an Object ID or Address.');
       }
       throw new Error(data.error.message || 'Failed to fetch transaction');
     }
