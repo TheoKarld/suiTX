@@ -3,6 +3,8 @@ KARLDWORLD DESIGN 2025
 
 View Our Company Portfolio: https://karldworld.xyz
 
+MVP Link - https://suitx.vercel.app/
+
 WEB3 IMPLEMENTATION
 
 # Run and deploy your suiTX app
