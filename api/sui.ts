@@ -1,26 +1,27 @@
 // /api/sui.ts
-import type { NextApiRequest, NextApiResponse } from 'next';
+const SUI_RPC_URL = "https://mainnet.sui.rpcpool.com";               // very fast
+// or
+// const SUI_RPC_URL = "https://sui-mainnet-endpoint.blockvision.org"; // also excellent
+// or
+// const SUI_RPC_URL = "https://sui-rpc.mainnet.chainbase.online";     // free tier works
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
-    }
+export default async function handler(req, res) {
+    if (req.method !== "POST") return res.status(405).end();
 
     try {
-        const suiResponse = await fetch('https://fullnode.mainnet.sui.io:443', {
-            method: 'POST',
+        const response = await fetch(SUI_RPC_URL, {
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json',
-                // Optional: forward client IP if you want rate-limiting on Sui side
-                // 'X-Forwarded-For': req.headers['x-forwarded-for'] as string || req.socket.remoteAddress || '',
+                "Content-Type": "application/json",
             },
             body: JSON.stringify(req.body),
         });
 
-        const data = await suiResponse.json();
-        res.status(suiResponse.status).json(data);
-    } catch (err: any) {
-        console.error('Proxy error:', err);
-        res.status(500).json({ error: 'Internal server error' });
+        // Important: copy the exact status code
+        const data = await response.json();
+        res.status(response.status).json(data);
+    } catch (err) {
+        console.error(err);
+        res.status(504).json({ error: "Gateway timeout – Sui node unreachable" });
     }
 }
