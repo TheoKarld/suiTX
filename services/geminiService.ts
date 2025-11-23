@@ -1,50 +1,79 @@
-import { GoogleGenAI } from "@google/genai";
+// src/services/geminiService.ts  → now powered by Groq (keep filename if you want)
 import { SuiTransactionBlockResponse } from '../types';
 
-// Initialize the Gemini API client
-// The API key is injected via process.env.API_KEY
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY });
+const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
+
+if (!GROQ_API_KEY) {
+  throw new Error('Missing VITE_GROQ_API_KEY – add it to your .env file');
+}
+
+const createPrompt = (data: SuiTransactionBlockResponse) => `
+You are a Sui blockchain expert. Explain this transaction in simple, plain English for a non-technical user.
+
+Use this exact Markdown structure:
+
+### Summary
+One-sentence summary (e.g., "You swapped 12 SUI for 450 USDC on Cetus")
+
+### Key Actions
+- Bullet points of transfers, mints, burns, etc.
+
+### Gas Fee
+How much SUI was used for gas
+
+### Under the Hood
+Package + function called (e.g., Cetus::swap, DeepBook::place_limit_order)
+
+Transaction JSON:
+\`\`\`json
+${JSON.stringify(data, null, 2)}
+\`\`\`
+`.trim();
 
 export const generateTransactionExplanationStream = async (
   transactionData: SuiTransactionBlockResponse
-) => {
-  const model = 'gemini-2.5-flash';
+): Promise<ReadableStream<string>> => {
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${GROQ_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'llama-3.1-70b-instant',   // Fast + high quality
+      messages: [{ role: 'user', content: createPrompt(transactionData) }],
+      temperature: 0.6,
+      max_tokens: 1024,
+      stream: true,
+    }),
+  });
 
-  // Prepare the prompt
-  const prompt = `
-    You are a blockchain expert who specializes in the Sui blockchain.
-    
-    I will provide you with the JSON data of a Sui transaction block. 
-    Your goal is to explain exactly what happened in this transaction in plain, easy-to-understand English.
-    
-    Target Audience: A non-technical user who wants to know "Did I swap tokens?", "Did I mint an NFT?", "Did I just send money?".
-
-    Structure your response using Markdown:
-    1. **Summary**: A 1-sentence high-level summary of the action (e.g., "User A swapped 10 SUI for 50 USDC").
-    2. **Key Actions**: Bullet points listing specific asset transfers, object creations, or smart contract interactions.
-    3. **Gas Fee**: Mention how much SUI was spent on gas.
-    4. **Technical Details**: A brief section for "Under the Hood" mentioning the specific function called (e.g., "DeepBook Place Limit Order").
-
-    Here is the Transaction JSON:
-    \`\`\`json
-    ${JSON.stringify(transactionData, null, 2)}
-    \`\`\`
-  `;
-
-  try {
-    const streamResult = await ai.models.generateContentStream({
-      model: model,
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: prompt }],
-        },
-      ],
-    });
-
-    return streamResult;
-  } catch (error) {
-    console.error('Gemini API Error:', error);
-    throw error;
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Groq error ${response.status}: ${err}`);
   }
+
+  if (!response.body) {
+    throw new Error('No response body from Groq');
+  }
+
+  // Transform OpenAI-style SSE → clean text stream
+  const transformer = new TransformStream({
+    transform(chunk, controller) {
+      const text = new TextDecoder().decode(chunk);
+      for (const line of text.split('\n')) {
+        if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+          try {
+            const json = JSON.parse(line.slice(6));
+            const content = json.choices?.[0]?.delta?.content;
+            if (content) controller.enqueue(content);
+          } catch (e) {
+            // ignore parse errors
+          }
+        }
+      }
+    },
+  });
+
+  return response.body.pipeThrough(transformer);
 };
