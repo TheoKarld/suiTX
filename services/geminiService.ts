@@ -43,7 +43,7 @@ export const generateTransactionExplanationStream = async (
       model: 'llama-3.3-70b-versatile',   // Fast + high quality
       messages: [{ role: 'user', content: createPrompt(transactionData) }],
       temperature: 0.6,
-      max_tokens: 1024,
+      max_tokens: 2024,
       stream: true,
     }),
   });
